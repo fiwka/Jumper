@@ -1,0 +1,34 @@
+name: Jumper
+main: ru.kdev.Jumper.Jumper
+description: Jumper mini game
+version: "1"
+api-version: "1.13"
+author: kdev aka Fiwka
+
+commands:
+  zones:
+    description: команда для работы с зонами
+  jadmin:
+    description: админские команды
+  rebirth:
+    description: сделать ребитх
+  upboots:
+    description: улучшить ботинки
+  balance:
+    description: просмотреть баланс
+    aliases: [bal, ebal, money]
+  pay:
+    description: передать деньги
+  economy:
+    description: администрирование экономики
+
+permissions:
+  jumper.zones:
+    description: Доступ к команде /zones
+    default: op
+  jumper.admin:
+    description: Доступ к команде /jadmin
+    default: op
+  jumper.economy:
+    description: Доступ к команде /economy
+    default: op

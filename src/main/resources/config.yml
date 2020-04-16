@@ -1,0 +1,14 @@
+spawn:
+  world: world
+  x: 0
+  y: 0
+  z: 0
+  yaw: 0
+  pitch: 0
+connection:
+  host: localhost
+  user: root
+  password: ""
+  database: jumper
+  port: 3306
+npcs:

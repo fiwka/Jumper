@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Jumper">
+    <output-path>$PROJECT_DIR$/../Server/plugins</output-path>
+    <root id="archive" name="Jumper.jar">
+      <element id="module-output" name="Jumper" />
+    </root>
+  </artifact>
+</component>
