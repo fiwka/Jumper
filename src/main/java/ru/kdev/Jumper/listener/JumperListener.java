@@ -15,7 +15,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -33,11 +32,14 @@ import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Random;
 
 public class JumperListener implements Listener {
-    Jumper jumper = Jumper.getPlugin(Jumper.class);
+    private Jumper jumper = null;
+
+    public JumperListener(Jumper jumper) {
+        this.jumper = jumper;
+    }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) throws SQLException {
@@ -45,28 +47,46 @@ public class JumperListener implements Listener {
         if(!Players.exists(player)) {
             Players.createPlayer(player);
         }
-        if(!Jumper.scoreboards.containsKey(player)) {
-            ArrayList<Team> rows = new ArrayList<>();
-            Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
-            Objective obj = board.registerNewObjective("jumper", "dummy", cColor("     &aJumper     "));
-            obj.setDisplaySlot(DisplaySlot.SIDEBAR);
-            rows.add(createRow(board, " &7◾ Уровень: &f" + IntFormatter.withSuffix(Players.getLevel(player)), "level", 1));
-            rows.add(createRow(board, " &7◾ XP: &f" + IntFormatter.withSuffix(Players.getXP(player)), "xp", 2));
-            rows.add(createRow(board, " &7◾ Осталось: &f" + IntFormatter.withSuffix(Players.getNeeds(player)), "needs", 3));
-            rows.add(createRow(board, " &7◾ Баланс: &a" + IntFormatter.withSuffix(Players.getBalance(player)) + "&c$", "balance", 4));
-            rows.add(createRow(board, " &7◾ Ребитхи: &c" + IntFormatter.withSuffix(Players.getRebirths(player)), "rebirths", 5));
-            obj.getScore("").setScore(8);
-            obj.getScore(cColor(" &bПрофиль")).setScore(7);
-            obj.getScore("§1").setScore(6);
-            obj.getScore("§2").setScore(5);
-            obj.getScore("§3").setScore(4);
-            obj.getScore("§4").setScore(3);
-            obj.getScore("§5").setScore(2);
-            obj.getScore(" ").setScore(1);
-            obj.getScore("     www.cristalix.ru     ").setScore(0);
-            player.setScoreboard(board);
-            Jumper.scoreboards.put(player, rows);
-        }
+        Players.cache(player);
+        Bukkit.getScheduler().runTaskLater(Jumper.getPlugin(Jumper.class), () -> {
+            if(!Jumper.scoreboards.containsKey(player)) {
+                ArrayList<Team> rows = new ArrayList<>();
+                Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
+                Objective obj = board.registerNewObjective("jumper", "dummy", cColor("     &aJumper     "));
+                obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+                try {
+                    rows.add(createRow(board, " &7◾ Уровень: &f" + IntFormatter.withSuffix(Players.getLevel(player)), "level", 1));
+                    rows.add(createRow(board, " &7◾ XP: &f" + IntFormatter.withSuffix(Players.getXP(player)), "xp", 2));
+                    rows.add(createRow(board, " &7◾ Осталось: &f" + IntFormatter.withSuffix(Players.getNeeds(player)), "needs", 3));
+                    rows.add(createRow(board, " &7◾ Баланс: &a" + IntFormatter.withSuffix(Players.getBalance(player)) + "&c$", "balance", 4));
+                    rows.add(createRow(board, " &7◾ Ребитхи: &c" + IntFormatter.withSuffix(Players.getRebirths(player)), "rebirths", 5));
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                obj.getScore("").setScore(8);
+                obj.getScore(cColor(" &bПрофиль")).setScore(7);
+                obj.getScore("§1").setScore(6);
+                obj.getScore("§2").setScore(5);
+                obj.getScore("§3").setScore(4);
+                obj.getScore("§4").setScore(3);
+                obj.getScore("§5").setScore(2);
+                obj.getScore(" ").setScore(1);
+                obj.getScore("     www.cristalix.ru     ").setScore(0);
+                player.setScoreboard(board);
+                Jumper.scoreboards.put(player, rows);
+                ItemStack boots = new ItemStack(Material.GOLDEN_BOOTS, 1);
+                ItemMeta bootsMeta = boots.getItemMeta();
+                bootsMeta.setDisplayName(ChatColor.GREEN + "Ботинки");
+                try {
+                    bootsMeta.setLore(Arrays.asList(ChatColor.GRAY + "Уровень " + Players.getBootsLevel(player)));
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                bootsMeta.setUnbreakable(true);
+                boots.setItemMeta(bootsMeta);
+                player.getInventory().setBoots(boots);
+            }
+        }, 20L);
         player.teleport(new Location(
                 Bukkit.getWorld(jumper.getConfig().getString("spawn.world")),
                 jumper.getConfig().getDouble("spawn.x"),
@@ -75,13 +95,6 @@ public class JumperListener implements Listener {
                 convertToFloat(jumper.getConfig().getDouble("spawn.yaw")),
                 convertToFloat(jumper.getConfig().getDouble("spawn.pitch"))
         ));
-        ItemStack boots = new ItemStack(Material.GOLDEN_BOOTS, 1);
-        ItemMeta bootsMeta = boots.getItemMeta();
-        bootsMeta.setDisplayName(ChatColor.GREEN + "Ботинки");
-        bootsMeta.setLore(Arrays.asList(ChatColor.GRAY + "Уровень " + Players.getBootsLevel(player)));
-        bootsMeta.setUnbreakable(true);
-        boots.setItemMeta(bootsMeta);
-        player.getInventory().setBoots(boots);
     }
 
     public static Float convertToFloat(double doubleValue) {
@@ -112,32 +125,6 @@ public class JumperListener implements Listener {
     public void onInvClick(InventoryClickEvent e) throws SQLException {
         if(e.getSlotType() == InventoryType.SlotType.ARMOR) {
             e.setCancelled(true);
-        }
-
-        if(e.getClickedInventory().getTitle().equals(ChatColor.GREEN + "Прокачка ботинок")) {
-            e.setCancelled(true);
-            Player player = (Player) e.getWhoClicked();
-            if(e.getCurrentItem().getType() == Material.EXPERIENCE_BOTTLE) {
-                if(Players.getBootsLevel(player) == 10) {
-                    player.sendMessage(ChatColor.RED + "Вы достигли максимального уровня ботинок!");
-                    return;
-                }
-                if(Players.getBalance(player) >= Players.getBootsLevel(player) * 100) {
-                    Players.takeBalance(player, Players.getBootsLevel(player) * 100);
-                    player.closeInventory();
-                    Players.setBLevel(player, Players.getBootsLevel(player) + 1);
-                    ItemStack boots = new ItemStack(Material.GOLDEN_BOOTS, 1);
-                    ItemMeta bootsMeta = boots.getItemMeta();
-                    bootsMeta.setDisplayName(ChatColor.GREEN + "Ботинки");
-                    bootsMeta.setLore(Arrays.asList(ChatColor.GRAY + "Уровень " + Players.getBootsLevel(player)));
-                    bootsMeta.setUnbreakable(true);
-                    boots.setItemMeta(bootsMeta);
-                    player.getInventory().setBoots(boots);
-                    player.sendMessage(ChatColor.GREEN + "Вы успешно прокачали ботинки!");
-                } else {
-                    player.sendMessage(ChatColor.RED + "У Вас недостаточно денег!");
-                }
-            }
         }
     }
 

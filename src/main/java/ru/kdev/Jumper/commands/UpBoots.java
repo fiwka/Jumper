@@ -13,13 +13,7 @@ public class UpBoots implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
         if(sender instanceof Player) {
             Player player = (Player) sender;
-            UpgradeBoots upBootsGui = null;
-            try {
-                upBootsGui = new UpgradeBoots(player);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            upBootsGui.showInventory();
+            UpgradeBoots.INVENTORY.open(player);
         }
         return false;
     }

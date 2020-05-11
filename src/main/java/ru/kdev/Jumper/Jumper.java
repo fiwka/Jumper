@@ -35,13 +35,14 @@ public class Jumper extends JavaPlugin {
     public static Map<Player, String> playing = new HashMap<>();
     public static Connection connection;
     private BukkitTask task;
+    private BukkitTask cache;
 
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
         zonesFile = new File(this.getDataFolder(), "zones.yml");
         this.saveZones();
-        Bukkit.getPluginManager().registerEvents(new JumperListener(), this);
+        Bukkit.getPluginManager().registerEvents(new JumperListener(this), this);
         try {
             this.connect();
         } catch (ClassNotFoundException e) {
@@ -60,6 +61,7 @@ public class Jumper extends JavaPlugin {
             @Override
             public void run() {
                 scoreboards.forEach((player, v) -> {
+                    if(!Bukkit.getOnlinePlayers().contains(player)) return;
                     try {
                         v.get(0).setPrefix(cColor(" &7◾ Уровень: &f" + IntFormatter.withSuffix(Players.getLevel(player))));
                         v.get(1).setPrefix(cColor(" &7◾ XP: &f" + IntFormatter.withSuffix(Players.getXP(player))));
@@ -90,6 +92,11 @@ public class Jumper extends JavaPlugin {
                 }
             }
         }.runTaskTimerAsynchronously(this, 0L, 20L);
+        cache = Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+            for(Player player : Bukkit.getOnlinePlayers()) {
+                Players.cache(player);
+            }
+        }, 0L, 6000L);
     }
 
     public static List<Entity> getNearbyEntities(Location where, int range) {
@@ -116,6 +123,7 @@ public class Jumper extends JavaPlugin {
     @Override
     public void onDisable() {
         task.cancel();
+        cache.cancel();
     }
 
     private String cColor(String str) {

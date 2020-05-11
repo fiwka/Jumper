@@ -9,7 +9,7 @@ import ru.kdev.Jumper.Jumper;
 import java.io.UnsupportedEncodingException;
 
 public class ZoneManager {
-    Jumper jumper = Jumper.getPlugin(Jumper.class);
+    private Jumper jumper = Jumper.getPlugin(Jumper.class);
 
     public void createZone(String name, Double x, Double y, Double z, Float yaw, Float pitch, Integer level, World world) throws UnsupportedEncodingException {
         jumper.getZones().set("zones." + name + ".world", world.getName());
